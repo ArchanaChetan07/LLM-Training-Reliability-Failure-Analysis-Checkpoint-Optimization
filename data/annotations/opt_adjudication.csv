@@ -1,0 +1,132 @@
+# Manual adjudication of every OPT-175B logbook entry in the final-run window (Run 12.00 .. completion).
+# One row per logbook entry (matched by unique header prefix). Coder read the full entry body.
+# category: hardware | hang | infra_software | unknown | optimization | planned | none
+#   hardware       unplanned stop with a named hardware cause (GPU lost, ECC/DRAM, IB/NCCL port error, node failure, CUDA fault)
+#   hang           job stopped making progress with no hardware root cause identified in the entry
+#   infra_software unplanned stop caused by tooling, checkpoint I/O, provider error or operator error
+#   unknown        unplanned restart whose cause the entry does not state
+#   optimization   deliberate rollback/relaunch for training-dynamics reasons (loss scale, LR, optimizer)
+#   planned        deliberate relaunch for software updates/ablations (no failure)
+#   none           entry does not describe a new interruption (notes, follow-ups of an already-counted incident)
+# n_events: interruptions represented by the entry (default 1 for unplanned/optimization/planned, 0 for none)
+# event_ts: failure time when the body states one (overrides header time); ISO with offset
+header_prefix,category,n_events,event_ts,note
+2021-11-11 5:30pm [Susan]: Run 12.00,hardware,1,,Lost a GPU on node-7
+2021-11-11 5:40pm [Susan]: Run 12.01,hang,1,,12.01 got stuck at startup; relaunched
+2021-11-11 11pm [Susan]: Run 12.02,none,0,,Relaunch that worked; recovery of 12.01 incident
+2021-11-12 3pm [Susan]: Run 12.03,unknown,1,,Restart of 12.02; cause not stated
+2021-11-12 6pm [Susan]: Run 12.04,hardware,1,,Hosts 95 and 120 full of ECC errors
+2021-11-12 7pm [Susan]: Run 12.05,infra_software,1,,Relaunch after removing tensor-init-on-GPU
+2021-11-12 10:30pm [Myle]: Run 12.06,infra_software,1,,Restore failed: checkpoint shards missing in blob
+2021-11-14 9:45pm [Myle]: Run 12.07,hang,1,,Previous run silently hung
+2021-11-16 11pm [Myle]: Run 12.08,hardware,1,,NCCL net/IB async port error
+2021-11-17 11pm [Myle]: Run 12.09,hardware,1,2021-11-18T02:24:00+00:00,CUDA unknown error at start of validation (log line 02:24 UTC)
+2021-11-18 List of issues,none,0,,Complaint list to provider
+2021-11-18 3pm [Stephen]: Run 12.10,hardware,1,,Relaunch forced by IB-induced slowdown
+2021-11-18 5:30pm [Stephen]: Notes,none,0,,Notes
+2021-11-19 9:30am [Myle]: Run 12.11,planned,1,,Planned kill to bisect bad-IB nodes + FSDP speedup
+2021-11-20 7:24pm ET: [Stephen oncall],optimization,1,,Loss scalar hit minimum
+2021-11-20 9:30pm [Myle]: Run 12.12,none,0,,Follow-up of loss-scale incident
+2021-11-21 Analysis,none,0,,Analysis note (38 s/update with downtime vs 19.3 without)
+2021-11-21 3pm [Myle]: Run 12.13,planned,1,,Manual kill to deploy blob-requeue fix
+2021-11-21 4:15pm [Myle]: Run 12.14,optimization,1,,Loss exploded; roll back + threshold loss scale
+2021-11-22 7:45am [Myle]: Run 12.15,hardware,1,,12.14 failed with CUDA error 999 (bad node)
+2021-11-23 10:50am [Myle]: Run 12.16,optimization,1,,Reduce clipping; relaunch from 24.5k
+2021-11-24 1:00pm ET [Susan]: Run 12.17,hardware,1,,12.16 stuck after ECC error (nodes 2 and 43)
+2021-11-24 2:10pm ET [Susan]: Run 12.18,hang,1,,12.17 hung during startup
+2021-11-24 3:30pm ET [Susan]: Run 12.19,none,0,,Node swap continuing 12.18 incident
+2021-11-24 10:40pm ET [Susan]: Run 12.20,planned,1,,Testing software fix #2681
+2021-11-24 11:18pm ET [Susan]: Run 12.21,hardware,1,,Node 58 DRAM errors; drained
+2021-11-25 8:53am ET [Susan]: Run 12.23,hardware,1,,IB completion errors; lost node-118 GPU
+2021-11-25 11:20am ET: Run 12.21 (requeue),optimization,1,,Stuck in loss-scale 0.25 loop
+2021-11-25 11:35am ET [Myle]: Run 12.22,none,0,,Follow-up; run-id bump
+2021-11-26 9:47am ET [Stephen managing cluster],none,0,,Spare-node maintenance only
+2021-11-27 10:59am PT: Run 12.24,unknown,1,,Rerun of job; cause not stated
+2021-11-27 6:10pm PT: Run 12.25,hang,1,,Job stuck for ~4 hours
+2021-11-27 11:39 ET [Stephen]: Run 12.26,hardware,1,2021-11-28T04:39:00+00:00,Hang with inforom-corrupted GPUs; header lacks am/pm and sits after 6:10pm PT entry so 11:39pm ET
+2021-11-28 1:50am ET [Stephen]: 12.27,hang,1,,Failed checkpoint upload then hang
+2021-11-28 3:20am ET [Stephen]: 12.28,none,0,,Retry of 12.27 incident
+2021-11-28 9:41am ET [Stephen]: 12.29,hardware,1,,CUDA illegal memory access on pg0-2
+2021-11-28 10:09am ET [Stephen]: 12.30,infra_software,1,,Corrupt 33250 checkpoints (storages not found)
+2021-11-28 12:28pm ET [Stephen]: 12.31,none,0,,Successful relaunch
+2021-11-28 5:52pm ET [Stephen]: 12.32,hardware,1,,Zero-message hang; inforom corrupted nodes 71/118
+2021-11-28 6:34pm ET [Stephen]: 12.33,hardware,1,,pg0-2 illegal memory exception
+2021-11-30 7:43pm PT [Susan]: 12.33 requeue,optimization,1,2021-11-30T03:00:00+00:00,Loss scale 0.25 stuck; TOC order places it before 2021-11-29 7:43pm PT entry so date is 11-29
+2021-11-29 7:43pm PT [Susan]: 12.34 restart,planned,1,,Restart to pull in commit
+2021-11-30 9:00am ET: 12.34 requeue,optimization,1,,Loss scale 0.25 all night
+2021-11-30 9:00am PT: 12.35,optimization,1,,Restart from 37k with SGD-mimicking optimizer
+2021-11-30 10:10am PT: 12.36,none,0,,12.35 never ran; same intervention
+2021-11-30 7:24pm ET: [Stephen oncall] Run 12.37,optimization,1,,Hit 0.25 loss scales
+2021-12-01 2:21am ET: [Stephen oncall] Run 12.37,optimization,1,,Hit 0.25 loss scales again
+2021-12-01 8:39am ET: 12.38,optimization,1,,Revert to Adam + lower LR
+2021-12-01 1:30pm ET: Launch of 12.39,optimization,1,,Loss-scale logic change
+2021-12-02 10:25am ET: Launch of 12.40,optimization,1,,Fake SGD lower LR
+2021-12-02 16:08 ET: Launch of 12.41,optimization,1,,True SGD
+2021-12-02 17:16 ET: Fake SGD debacle,none,0,,Debrief
+2021-12-03 7:20am ET: Launch of 12.42,optimization,1,,Switch back to Adam
+"2021-12-03, 10:35pm",none,0,,Blob upload broken warning; no interruption
+2021-12-03,none,0,,Action items
+2021-12-04 5:35am ET: Launch of 12.43,hardware,1,2021-12-04T06:00:00+00:00,12.42 hung after CUDA unspecified launch failure around 1am ET (node-65)
+2021-12-04 20:24 ET: Loss scale exploding,optimization,1,,Loss scale exploding
+2021-12-05- 00:00 ET: Loss scale exploding 2,none,0,,Same incident as previous
+2021-12-05 02:24 ET: Side experiment,none,0,,Side job
+2021-12-05 05:35 PT: Checking on 12.44,none,0,,Note
+2021-12-05 12:15pm ET: Requeueing 12.44,hardware,1,,NCCL port error on node-108/53
+2021-12-05 18:30 ET: Poking through dmesg,none,0,,Investigation
+2021-12-05 9pm ET: Requeue after GPU error,hardware,1,,CUBLAS failure; node-51 GPU lost
+2021-12-06 05:00 PT: Grad norm spiking,none,0,,Recommendation only; relaunch counted under hang entry
+2021-12-06 05:13 PT: Job Hanging,hardware,1,,Job hanging; 5 nodes compromised (GPU lost x2)
+2021-12-06 8:30am ET: Lowering LR,none,0,,Relaunch after the hang (LR lowered at same time)
+2021-12-07 10:48am ET: ECC error,hardware,1,,node-26 GPU lost
+2021-12-07 10:59pm ET: RuntimeError,hardware,1,,CUDA unspecified launch failure
+2021-12-08 04:00am PT: Checking in,none,0,,Note
+2021-12-08 TBD: Analysis,none,0,,Analysis
+2021-12-08 05:05pm ET: GPU failure,hardware,1,,GPU failure caused 12.47 to hang
+2021-12-08 8:55pm ET: run12.48,planned,1,,Planned relaunch after environment debug
+2021-12-09: Megatron v2.6 Debrief,none,0,,Debrief
+2021-12-09 10:45am PT: Provisioning error,none,0,,Spare-node provisioning
+2021-12-09 16:00 PT: [Susan] Run 12.49,hardware,1,,NCCL errors from nodes 108/53
+2021-12-10 05:52 ET: [Stephen] Cluster maintenance,none,0,,Spare health checks
+2021-12-10 20:58 ET: [Stephen] The ablation,planned,1,,Planned pause for megatron ablation
+2021-12-10 22:42: [Stephen] 12.50,none,0,,Resume after ablation
+2021-12-10 23:14: [Stephen] 12.51,infra_software,1,,Operator error (forgot LR) + missing shards; relaunch
+2021-12-11 02:52 PT: [Susan] Noticed IB issues,hardware,1,,IB completion error; GPU lost
+2021-12-11 07:53 ET: [Stephen] Cluster Maintenance,none,0,,Reprovision spares
+2021-12-13 11:49 ET: [Stephen] Bumping timelimit,none,0,,Config change
+2021-12-13: Preemptive Plan,none,0,,Plan
+2021-12-13 14:00 ET: Reverse Shadow,none,0,,Onboarding
+2021-12-14 03:30 ET: [Susan] Requeue,hardware,1,,CUDA launch failure; node-88 GPU lost
+2021-12-14 13:30 ET: [Moya] Scancel,optimization,1,,Restart at 72750 to lower LR
+2021-12-14 18:30 ET: [Kurt] Drain,none,0,,Drain spares
+2021-12-16 12:15 ET: increased job time limit,none,0,,Config change
+2021-12-17 15:34 ET: [Daniel] Node down,hardware,1,,IB completion error node-105
+2021-12-19 12pm ET: Crossing the epoch,none,0,,Note
+2021-12-20 12:12 AM PT: [Punit] Node down,hardware,1,,Node down
+2021-12-21 5:30am ET: [Susan] Node down,hardware,1,,node-81 GPU lost (LR lowered at relaunch)
+2021-12-21 (morning until 3 pm ish) [Stephen] Omicron Sev,infra_software,1,2021-12-21T14:00:00+00:00,Provider deleted the cluster (morning)
+2021-12-21 4:30 pm ET: [Moya] Kick off train 12.55,none,0,,Recovery from cluster deletion
+2021-12-22 3:30 pm ET: [Myle] new oncall,none,0,,Status
+2021-12-23 7:00 ET: Stephen,none,0,,Node bookkeeping
+2021-12-23 8:30 ET: Myle,hardware,1,2021-12-23T13:00:00+00:00,node-107 node failure; job died ~30 min before entry
+2021-12-23 6:00 PM ET: Kurt,none,0,,Spare checks
+2021-12-24 10:00 ET: Kurt,none,0,,Spare checks
+2021-12-24 12:40 ET: Auto-recovery script,none,0,,Tooling merged
+2021-12-25  04:18 ET [Myle],none,0,,Monitor relaunch only
+2021-12-25 06:25 ET: [Daniel/Susan],none,0,,Same incident as RCA entry
+2021-12-25 08:49 ET [Stephen],none,0,,Same incident (node-19 GPU lost)
+2021-12-25 09:48 ET [Myle] - RCA,hardware,1,2021-12-25T09:56:00+00:00,RCA: job hangs 09:56 UTC; root cause node-19
+2021-12-27 13:19 CET [Mikel],hang,3,2021-12-27T10:19:00+00:00,Autorecovery kicked in 3 times in last few hours during validation (genuine hangs per postmortem); spread over 08:19-12:19 UTC
+2021-12-27 9:25 ET [Myle] - postmortem,none,0,,Postmortem
+2021-12-28 9:10 ET [Myle/Stephen],unknown,1,,Job down; autorecovery failed (lock-file permission)
+2021-12-28 16:00 PT [Susan],unknown,1,,Job restarted and auto-recovered
+2021-12-29 13:40 ET [Stephen],hardware,1,,WPS drop; node-95 bad NCCL; manual pause + requeue
+2021-12-30 09:30 ET [Stephen],hardware,1,,Crash with hardware failure
+2021-12-30 17:00 ET [Moya],none,0,,Spare checks
+2021-12-31 02:53 ET [Punit],none,0,,Monitor start
+2021-12-31 12:00 ET [Moya],hang,1,2021-12-31T11:00:00+00:00,train.log stalled ~6am ET; autorecovered
+2022-01-02 17:26 ET [Stephen],none,0,,Observation only
+2022-01-03 05:10 ET [Daniel],none,0,,Observation only
+2022-01-04 15:22 ET [Sam],unknown,1,,Auto-recovery failed; manual restart
+2022-01-05 14:10 [Stephen + Mikel],infra_software,1,,False-positive hang detector put job on hold
+2022-01-06 10:30ish [Susan + Mikel],none,0,,Timezone confusion only
+2022-01-06 15:47 ET [Everyone],none,0,,Training complete

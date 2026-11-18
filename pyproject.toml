@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-training-reliability"
+version = "0.1.0"
+description = "Failure analysis of GPU-cluster traces and checkpoint-interval optimization for distributed LLM training"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Archana Suresh Patil" }]
+requires-python = ">=3.10"
+keywords = ["distributed-training", "fault-tolerance", "checkpointing", "survival-analysis",
+            "reliability", "mtbf", "llm", "gpu-cluster", "weibull"]
+classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License",
+               "Topic :: Scientific/Engineering :: Artificial Intelligence"]
+dependencies = ["numpy>=1.24", "pandas>=2.0", "scipy>=1.10", "matplotlib>=3.7", "pymupdf>=1.23"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pyflakes>=3"]
+
+[project.scripts]
+ckpt-calc = "llm_reliability.cli:main"
+
+[project.urls]
+Repository = "https://github.com/ArchanaChetan07/LLM-Training-Reliability-Failure-Analysis-Checkpoint-Optimization"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

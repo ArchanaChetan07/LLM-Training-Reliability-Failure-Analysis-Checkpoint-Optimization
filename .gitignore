@@ -1,0 +1,13 @@
+data/raw/**/*.csv
+data/raw/**/*.tar.gz
+data/raw/**/*.pdf
+data/interim/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+results/run_*.log
+*.pt
+*.pt.tmp
+.venv/
+build/
+dist/

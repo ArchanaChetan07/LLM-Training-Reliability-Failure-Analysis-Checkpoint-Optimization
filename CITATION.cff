@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this software or the adjudicated OPT-175B interruption trace, please cite it as below."
+title: "LLM Training Reliability: Failure Analysis & Checkpoint Optimization"
+abstract: >-
+  Survival analysis of public GPU-cluster failure data (Meta OPT-175B logbook, Shanghai AI Lab Acme
+  traces, Alibaba PAI trace) and trace-driven evaluation of checkpoint-interval policies
+  (Young, Daly, online Daly, Weibull hazard-adaptive) for distributed LLM training.
+authors:
+  - family-names: "Patil"
+    given-names: "Archana Suresh"
+version: 0.1.0
+date-released: 2026-11-18
+license: MIT
+repository-code: "https://github.com/ArchanaChetan07/LLM-Training-Reliability-Failure-Analysis-Checkpoint-Optimization"
+keywords: [distributed training, fault tolerance, checkpointing, survival analysis, reliability, MTBF, LLM]

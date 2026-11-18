@@ -3,17 +3,59 @@
 [![ci](https://github.com/ArchanaChetan07/LLM-Training-Reliability-Failure-Analysis-Checkpoint-Optimization/actions/workflows/ci.yml/badge.svg)](https://github.com/ArchanaChetan07/LLM-Training-Reliability-Failure-Analysis-Checkpoint-Optimization/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue) ![license](https://img.shields.io/badge/license-MIT-green)
 
-**When does tuning the checkpoint interval pay off? Failure statistics from three public LLM-cluster traces.**
+**Data-driven checkpoint-interval optimization for distributed LLM training, built on survival analysis of real
+GPU-cluster failure data from Meta OPT-175B, Shanghai AI Lab Acme, and Alibaba PAI.**
 
-**Archana Suresh Patil** · November 2026 · every number below regenerates with `make all`, and CI checks the
-README against `results/` on every push.
+**Author:** Archana Suresh Patil · November 2026
 
-**Stack:** Python · NumPy · SciPy · pandas · PyTorch DDP · survival analysis (Weibull MLE, Kaplan–Meier,
-proportional hazards) · discrete-event simulation · fault-tolerant distributed training
+## Project Overview
+
+An end-to-end **machine learning infrastructure** and **reliability engineering** project. It measures how often
+large-scale **distributed training** jobs fail on **GPU clusters**, models those failures with **survival analysis**,
+and uses the models to choose **checkpoint intervals** that minimize lost training time. The pipeline turns raw
+operator logs and **1.9M+ scheduler job records** into failure datasets. It fits **Weibull** and
+**proportional-hazards** models, tests the **Young/Daly** optimal-checkpoint formulas against real failure patterns
+with a **discrete-event simulator**, and ships a **CLI calculator**, an interactive web calculator, and a drop-in
+**PyTorch DDP** checkpoint scheduler. Every reported number is reproducible with `make all`, and **CI (GitHub
+Actions)** checks the README against the results on every push.
+
+## Key Results
+
+- **Built a new failure dataset** by hand-coding 119 entries of Meta's 114-page OPT-175B training logbook:
+  **50 unplanned interruptions on 992 NVIDIA A100 GPUs over 56 days**, MTBF **26.8 hours** (95% CI 20.4–36.2),
+  about 26.6k GPU-hours per interruption.
+- **Showed keyword-based log mining is unreliable** for failure analysis: agreement with manual coding of only
+  Cohen's κ = 0.38.
+- **Reconstructed 700 restart chains from 4,247 LLM pretraining jobs** (Acme). Found that **83% of interruptions are
+  invisible** if you count only jobs marked FAILED.
+- **Found that jobs fail most right after a restart** (Weibull shape k ≈ 0.5–0.6, against the k = 1 that textbook
+  formulas assume). Interruption rate **barely scales with GPU count** (size exponent β ≈ 0.1–0.4, not 1).
+- **Tuned checkpoint intervals recover up to 4.2 percentage points of wall-clock training time** compared with a
+  fixed 3-hour schedule: about **55k A100 GPU-hours** on an OPT-175B-scale run, with paired bootstrap 95% CIs.
+- **Designed a hazard-adaptive checkpoint policy** that cuts wasted compute **3–12% below an online-tuned Daly
+  policy** on held-out pretraining runs, with parameters transferred across clusters.
+- **Shipped production-style tooling:** `ckpt-calc` CLI, interactive calculator, `OnlineCheckpointScheduler` for
+  PyTorch DDP, 36 unit tests, and a CI pipeline on Python 3.10 and 3.12.
+
+## Skills Demonstrated
+
+- **Statistical modeling:** survival analysis, Weibull maximum-likelihood estimation, Kaplan–Meier estimation,
+  parametric (Weibull) proportional-hazards modeling, right-censored data, bootstrap confidence intervals, hypothesis testing,
+  Poisson point processes, Monte Carlo simulation.
+- **ML systems and infrastructure:** distributed training, fault tolerance, checkpointing, GPU cluster reliability,
+  MTBF analysis, large-scale LLM pretraining operations, PyTorch Distributed Data Parallel (DDP).
+- **Data engineering:** PDF text extraction, log parsing, data annotation and adjudication, ETL over 1.9M+ job
+  records, data provenance and checksum-verified reproducibility.
+- **Software engineering:** Python packaging, command-line tools, unit testing (pytest), continuous integration
+  (GitHub Actions), reproducible research pipelines, technical writing.
+
+## Tech Stack
+
+Python · NumPy · SciPy · pandas · Matplotlib · PyTorch (DDP) · PyMuPDF · pytest · GitHub Actions · HTML/JavaScript
 
 ---
 
-## Abstract
+## Research Summary
 
 Checkpoint intervals for large training runs are usually set once (e.g. "every 250 updates") and
 then left alone. The textbook alternatives, Young (1974) and Daly (2006), pick the interval from the
